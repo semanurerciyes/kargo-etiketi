@@ -1,0 +1,37 @@
+{
+  "name": "kargo-etiketi",
+  "version": "1.0.0",
+  "description": "Yazdırılabilir kargo etiketi aracı",
+  "author": "Semanur",
+  "keywords": [
+    "nextjs",
+    "etiket",
+    "tailwind",
+    "yazdırma"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "file-saver": "^2.0.5",
+    "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.10.3",
+    "jszip": "^3.10.1",
+    "next": "^14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.0.14",
+    "@types/react": "19.1.8",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "5.8.3"
+  },
+  "license": "ISC"
+}
