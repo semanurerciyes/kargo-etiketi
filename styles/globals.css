@@ -1,0 +1,38 @@
+/* Tailwind temel stilleri */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Yazdırma için sayfa ayarları */
+@page {
+  margin: 0;
+  size: A4;
+}
+
+@media print {
+  body {
+    margin: 0;
+    background: white;
+  }
+
+  /* Yazdırma dışı alanları gizle */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Sadece #etiket-pdf alanını yazdır */
+  body * {
+    visibility: hidden;
+  }
+
+  #etiket-pdf,
+  #etiket-pdf * {
+    visibility: visible;
+  }
+
+  #etiket-pdf {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+}
