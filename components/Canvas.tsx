@@ -1,2 +1,7 @@
-npx create-next-app kargo-etiketi-araci --typescript
-cd kargo-etiketi-araci
+import React from "react";
+
+const Canvas = () => {
+  return <div>Canvas alanı</div>;
+};
+
+export default Canvas;
