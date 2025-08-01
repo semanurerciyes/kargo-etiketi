@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Varsayılan yazdırma ayarları */
+/* Yazdırma sayfa ayarı: Tam kenarsız A4 */
 @page {
   margin: 0;
-  size: A4 portrait; /* Tarayıcılar bu değeri kullanır, class'la dinamik kontrol için aşağıya bak */
+  size: A4 portrait;
 }
 
-/* Ortak yazdırma stilleri */
+/* Yazdırma görünüm ayarları */
 @media print {
   body {
     margin: 0;
@@ -32,6 +32,10 @@
     position: absolute;
     top: 0;
     left: 0;
+    margin: 0;
+    padding: 0;
+    width: 210mm; /* Default portrait için */
+    height: 297mm;
   }
 
   /* Yazdırırken referans çizgilerini gizle */
@@ -41,7 +45,7 @@
   }
 }
 
-/* Görünümde yön sınıfı etkileri (opsiyonel ama önerilir) */
+/* Yön sınıfları ile ekrandayken de uygun boyutlandırma yapılır */
 body.portrait #etiket-pdf {
   width: 210mm;
   height: 297mm;
@@ -52,7 +56,7 @@ body.landscape #etiket-pdf {
   height: 210mm;
 }
 
-/* jsPDF gibi dış araçlara bilgi vermek için kullanılabilir */
+/* JS'den erişilebilir özel değişken (isteğe bağlı) */
 body.landscape {
   --print-orientation: landscape;
 }
@@ -61,9 +65,7 @@ body.portrait {
   --print-orientation: portrait;
 }
 
-/* PDF dışa aktarımı için JS’de eklediğimiz sınıf */
-/* PDF indirme anında JS tarafından .pdf-hide sınıfı ekleniyor */
-
+/* PDF dışa aktarımında referans çizgileri gizlensin */
 .reference-cell.pdf-hide {
   visibility: hidden !important;
   border: none !important;
