@@ -2,16 +2,19 @@
 
 import React, { useState, useEffect } from "react";
 
-const paperSizes = {
-  A4: { width: 210, height: 294 }, // mm
+const defaultPaperSizes = {
+  A4: { width: 210, height: 294 },
   A5: { width: 148, height: 210 },
+  Label: { width: 100, height: 150 },
 };
 
 type Props = {
   partCount: 1 | 2 | 4 | 8 | 12 | 16 | 32;
-  paperSize?: keyof typeof paperSizes;
+  paperSize?: keyof typeof defaultPaperSizes;
   images: (string | null)[];
   setImages: React.Dispatch<React.SetStateAction<(string | null)[]>>;
+  orientation: "portrait" | "landscape";
+  setOrientation: React.Dispatch<React.SetStateAction<"portrait" | "landscape">>;
 };
 
 export default function PaperLayout({
@@ -19,8 +22,12 @@ export default function PaperLayout({
   paperSize = "A4",
   images,
   setImages,
+  orientation,
+  setOrientation,
 }: Props) {
-  const currentSize = paperSizes[paperSize];
+  const [selectedPaperSize, setSelectedPaperSize] = useState<keyof typeof defaultPaperSizes>(paperSize);
+  const [customSize, setCustomSize] = useState(defaultPaperSizes[paperSize]);
+  const [margin, setMargin] = useState({ top: 10, right: 10, bottom: 10, left: 10 });
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const isCellEmpty = (i: number) => images[i] === null;
@@ -39,18 +46,18 @@ export default function PaperLayout({
   };
 
   const [cols, rows] = getGridDimensions(partCount);
-  const cellWidth = currentSize.width / cols;
-  const cellHeight = currentSize.height / rows;
+  const sizeFromSelection = defaultPaperSizes[selectedPaperSize] || customSize;
+  const pageWidth = orientation === "portrait" ? sizeFromSelection.width : sizeFromSelection.height;
+  const pageHeight = orientation === "portrait" ? sizeFromSelection.height : sizeFromSelection.width;
+  const contentWidth = pageWidth - margin.left - margin.right;
+  const contentHeight = pageHeight - margin.top - margin.bottom;
+  const cellWidth = contentWidth / cols;
+  const cellHeight = contentHeight / rows;
 
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
       const file = e.clipboardData?.files[0];
-      if (
-        file &&
-        file.type.startsWith("image/") &&
-        selectedIndex !== null &&
-        isCellEmpty(selectedIndex)
-      ) {
+      if (file && file.type.startsWith("image/") && selectedIndex !== null && isCellEmpty(selectedIndex)) {
         const url = URL.createObjectURL(file);
         setImages((prev) => {
           const updated = [...prev];
@@ -77,11 +84,75 @@ export default function PaperLayout({
   };
 
   const handlePrint = () => {
+    if (orientation === "landscape") {
+      document.body.classList.add("print-landscape");
+    } else {
+      document.body.classList.remove("print-landscape");
+    }
+
     window.print();
+
+    setTimeout(() => {
+      document.body.classList.remove("print-landscape");
+    }, 1000);
   };
 
   return (
     <div className="p-4 print-area">
+      {/* Ayar Paneli */}
+      <div className="mb-4 space-y-2 no-print">
+        <div className="flex gap-4">
+          <label>
+            Sayfa Türü:
+            <select
+              className="ml-2 border p-1"
+              value={selectedPaperSize}
+              onChange={(e) => {
+                const value = e.target.value as keyof typeof defaultPaperSizes;
+                setSelectedPaperSize(value);
+                setCustomSize(defaultPaperSizes[value]);
+              }}
+            >
+              {Object.keys(defaultPaperSizes).map((key) => (
+                <option key={key} value={key}>{key}</option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Yön:
+            <select
+              className="ml-2 border p-1"
+              value={orientation}
+              onChange={(e) => setOrientation(e.target.value as "portrait" | "landscape")}
+            >
+              <option value="portrait">Dikey</option>
+              <option value="landscape">Yatay</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          {["top", "right", "bottom", "left"].map((side) => (
+            <label key={side}>
+              {side.toUpperCase()} boşluk:
+              <input
+                type="number"
+                className="ml-1 border p-1 w-16"
+                value={margin[side as keyof typeof margin]}
+                onChange={(e) =>
+                  setMargin((prev) => ({
+                    ...prev,
+                    [side]: parseInt(e.target.value) || 0,
+                  }))
+                }
+              />{" "}
+              mm
+            </label>
+          ))}
+        </div>
+      </div>
+
       {/* Butonlar */}
       <div className="flex gap-4 mb-4 no-print">
         <button
@@ -102,13 +173,20 @@ export default function PaperLayout({
       {/* Kağıt Alanı */}
       <div
         id="etiket-pdf"
-        className="grid gap-1 bg-white shadow-sm rounded print-area"
+        className="bg-white shadow rounded relative"
         style={{
-          width: `${currentSize.width}mm`,
-          height: `${currentSize.height}mm`,
+          width: `${pageWidth}mm`,
+          height: `${pageHeight}mm`,
+          paddingTop: `${margin.top}mm`,
+          paddingRight: `${margin.right}mm`,
+          paddingBottom: `${margin.bottom}mm`,
+          paddingLeft: `${margin.left}mm`,
+          boxSizing: "border-box",
+          border: "1px solid #aaa",
+          display: "grid",
           gridTemplateColumns: `repeat(${cols}, 1fr)`,
           gridTemplateRows: `repeat(${rows}, 1fr)`,
-          border: "1px solid #aaa",
+          gap: "1mm",
         }}
       >
         {Array.from({ length: partCount }, (_, i) => (
@@ -128,10 +206,8 @@ export default function PaperLayout({
               }
             }}
             onDragOver={(e) => e.preventDefault()}
-            className={`border border-dashed flex items-center justify-center cursor-pointer transition-all overflow-hidden ${
-              selectedIndex === i
-                ? "border-blue-500 bg-blue-100"
-                : "border-gray-400"
+            className={`border border-dashed flex items-center justify-center cursor-pointer transition-all overflow-hidden reference-cell ${
+              selectedIndex === i ? "border-blue-500 bg-blue-100" : "border-gray-400"
             }`}
             style={{
               width: `${cellWidth}mm`,
