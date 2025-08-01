@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 
 const defaultPaperSizes = {
-  A4: { width: 210, height: 294 },
+  A4: { width: 210, height: 297 },
   A5: { width: 148, height: 210 },
   Label: { width: 100, height: 150 },
 };
@@ -27,7 +27,7 @@ export default function PaperLayout({
 }: Props) {
   const [selectedPaperSize, setSelectedPaperSize] = useState<keyof typeof defaultPaperSizes>(paperSize);
   const [customSize, setCustomSize] = useState(defaultPaperSizes[paperSize]);
-  const [margin, setMargin] = useState({ top: 10, right: 10, bottom: 10, left: 10 });
+  const [margin, setMargin] = useState({ top: 0, right: 0, bottom: 0, left: 0 });
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const isCellEmpty = (i: number) => images[i] === null;
@@ -55,6 +55,9 @@ export default function PaperLayout({
   const cellHeight = contentHeight / rows;
 
   useEffect(() => {
+    document.body.classList.remove("portrait", "landscape");
+    document.body.classList.add(orientation);
+
     const handlePaste = (e: ClipboardEvent) => {
       const file = e.clipboardData?.files[0];
       if (file && file.type.startsWith("image/") && selectedIndex !== null && isCellEmpty(selectedIndex)) {
@@ -71,7 +74,7 @@ export default function PaperLayout({
     return () => {
       window.removeEventListener("paste", handlePaste as EventListener);
     };
-  }, [selectedIndex, setImages]);
+  }, [orientation, selectedIndex, setImages]);
 
   const handleClear = () => {
     if (selectedIndex !== null && images[selectedIndex]) {
@@ -84,17 +87,7 @@ export default function PaperLayout({
   };
 
   const handlePrint = () => {
-    if (orientation === "landscape") {
-      document.body.classList.add("print-landscape");
-    } else {
-      document.body.classList.remove("print-landscape");
-    }
-
     window.print();
-
-    setTimeout(() => {
-      document.body.classList.remove("print-landscape");
-    }, 1000);
   };
 
   return (
@@ -170,10 +163,10 @@ export default function PaperLayout({
         </button>
       </div>
 
-      {/* Kağıt Alanı */}
+      {/* Etiket Alanı */}
       <div
         id="etiket-pdf"
-        className="bg-white shadow rounded relative"
+        className="bg-white shadow relative"
         style={{
           width: `${pageWidth}mm`,
           height: `${pageHeight}mm`,
@@ -182,11 +175,10 @@ export default function PaperLayout({
           paddingBottom: `${margin.bottom}mm`,
           paddingLeft: `${margin.left}mm`,
           boxSizing: "border-box",
-          border: "1px solid #aaa",
           display: "grid",
           gridTemplateColumns: `repeat(${cols}, 1fr)`,
           gridTemplateRows: `repeat(${rows}, 1fr)`,
-          gap: "1mm",
+          gap: "0mm", // referans çizgisiz tam otursun
         }}
       >
         {Array.from({ length: partCount }, (_, i) => (
