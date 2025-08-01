@@ -6,9 +6,10 @@ const html2pdf = typeof window !== "undefined" ? require("html2pdf.js") : null;
 
 type Props = {
   images: (string | null)[];
+  orientation: "portrait" | "landscape"; // 👈 yeni prop
 };
 
-export default function ExportButtons({ images }: Props) {
+export default function ExportButtons({ images, orientation }: Props) {
   const handlePDFExport = () => {
     if (!html2pdf) {
       alert("PDF oluşturma yalnızca tarayıcıda çalışır.");
@@ -28,7 +29,7 @@ export default function ExportButtons({ images }: Props) {
         filename: "etiketler.pdf",
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2 },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        jsPDF: { unit: "mm", format: "a4", orientation }, // 👈 yön bilgisi buraya dinamik geldi
       })
       .save();
   };
