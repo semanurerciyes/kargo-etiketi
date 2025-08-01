@@ -1,8 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Varsayılan yazdırma ayarları */
 @page {
+  size: A4 portrait;
   margin: 0;
-  size: A4;
 }
 
+/* Yazdırma görünüm ayarları */
 @media print {
   body {
     margin: 0;
@@ -13,7 +19,6 @@
     display: none !important;
   }
 
-  /* Sadece belirli alan yazdırılsın */
   body * {
     visibility: hidden;
   }
@@ -28,4 +33,23 @@
     top: 0;
     left: 0;
   }
+
+  /* Yön bazlı sayfa ayarı */
+  body.portrait {
+    /* Bazı tarayıcılarda desteklenebilir */
+    size: A4 portrait;
+  }
+
+  body.landscape {
+    size: A4 landscape;
+  }
+}
+
+/* Yön sınıfları - görünümde etkili olur */
+body.portrait {
+  --print-orientation: portrait;
+}
+
+body.landscape {
+  --print-orientation: landscape;
 }
