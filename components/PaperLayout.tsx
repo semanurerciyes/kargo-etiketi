@@ -38,7 +38,7 @@ export default function PaperLayout({
       case 2: return [1, 2];
       case 4: return [2, 2];
       case 8: return [2, 4];
-      case 12: return [3, 4];
+      case 12: return [2, 6];
       case 16: return [4, 4];
       case 32: return [4, 8];
       default: return [1, 1];
