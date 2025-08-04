@@ -6,7 +6,7 @@ const html2pdf = typeof window !== "undefined" ? require("html2pdf.js") : null;
 
 type Props = {
   images: (string | null)[];
-  orientation: "portrait" | "landscape"; // 👈 yeni prop
+  orientation: "portrait" | "landscape";
 };
 
 export default function ExportButtons({ images, orientation }: Props) {
@@ -22,16 +22,25 @@ export default function ExportButtons({ images, orientation }: Props) {
       return;
     }
 
+    const refs = element.querySelectorAll(".reference-cell");
+
+    // Referans çizgilerini gizle
+    refs.forEach((el) => el.classList.add("pdf-hide"));
+
     html2pdf()
       .from(element)
       .set({
         margin: 0,
         filename: "etiketler.pdf",
         image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "mm", format: "a4", orientation }, // 👈 yön bilgisi buraya dinamik geldi
+        html2canvas: { scale:orientation == "landscape" ?1.2:1.5},
+        jsPDF: { unit: "mm", format: "a4", orientation },
       })
-      .save();
+      .save()
+      .finally(() => {
+        // PDF işleminden sonra referans çizgilerini geri göster
+        refs.forEach((el) => el.classList.remove("pdf-hide"));
+      });
   };
 
   return (
