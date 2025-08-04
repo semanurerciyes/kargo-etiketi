@@ -1,55 +1,68 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Varsayılan yazdırma ayarları */
+/* Yazdırma ayarları */
 @page {
-  size: A4 portrait;
   margin: 0;
+  size: A4 portrait;
 }
 
-/* Yazdırma görünüm ayarları */
 @media print {
   body {
     margin: 0;
     background: white;
   }
 
+  /* Yazdırma sırasında gizlenmesi gereken alanlar */
   .no-print {
     display: none !important;
   }
 
+  /* Genel olarak tüm elementleri gizle */
   body * {
     visibility: hidden;
   }
 
+  /* PDF çıktı alanını görünür yap */
   #etiket-pdf,
   #etiket-pdf * {
     visibility: visible;
   }
 
+  /* PDF alanının pozisyonu ve boyutu */
   #etiket-pdf {
     position: absolute;
     top: 0;
     left: 0;
+    margin: 0;
+    padding: 0;
+    width: 210mm;
+    height: 297mm;
   }
 
-  /* Yön bazlı sayfa ayarı */
-  body.portrait {
-    /* Bazı tarayıcılarda desteklenebilir */
-    size: A4 portrait;
+  /* Yatay modda genişlik ve yükseklik değişimi */
+  body.landscape #etiket-pdf {
+    width: 297mm;
+    height: 210mm;
   }
 
-  body.landscape {
-    size: A4 landscape;
+  /* Yazdırırken referans çizgilerini gizle */
+  .reference-cell {
+    visibility: hidden !important;
+    border: none !important;
   }
 }
 
-/* Yön sınıfları - görünümde etkili olur */
-body.portrait {
-  --print-orientation: portrait;
+/* Yazdırma dışı, ekranda da yön sınıfına göre boyutlandırma */
+body.portrait #etiket-pdf {
+  width: 210mm;
+  height: 297mm;
 }
 
-body.landscape {
-  --print-orientation: landscape;
+body.landscape #etiket-pdf {
+  width: 297mm;
+  height: 210mm;
+}
+
+/* PDF export sırasında referans çizgilerini gizleyecek sınıf */
+.reference-cell.pdf-hide {
+  
+  border: none !important;
 }
