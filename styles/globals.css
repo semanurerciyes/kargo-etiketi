@@ -67,6 +67,5 @@ body.portrait {
 
 /* PDF dışa aktarımında referans çizgileri gizlensin */
 .reference-cell.pdf-hide {
-  visibility: hidden !important;
   border: none !important;
 }
