@@ -4,8 +4,12 @@ import React, { useState, useEffect } from "react";
 
 const defaultPaperSizes = {
   A4: { width: 210, height: 297 },
-  A5: { width: 148, height: 210 },
-  Label: { width: 100, height: 150 },
+  Label: { width: 210, height: 297 },
+};
+
+const paperSizeNames: Record<string, string> = {
+  A4: "A4",
+  Label: "Etiket",
 };
 
 type Props = {
@@ -29,6 +33,9 @@ export default function PaperLayout({
   const [customSize, setCustomSize] = useState(defaultPaperSizes[paperSize]);
   const [margin, setMargin] = useState({ top: 0, right: 0, bottom: 0, left: 0 });
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  // px'den mm'ye dönüşüm (96 DPI standart)
+  const pxToMm = (px: number) => (px * 25.4) / 96;
 
   const isCellEmpty = (i: number) => images[i] === null;
 
@@ -104,10 +111,22 @@ export default function PaperLayout({
                 const value = e.target.value as keyof typeof defaultPaperSizes;
                 setSelectedPaperSize(value);
                 setCustomSize(defaultPaperSizes[value]);
+                if (value === "Label") {
+                  setMargin({
+                    top: pxToMm(20),
+                    right: pxToMm(4),
+                    bottom: pxToMm(20),
+                    left: pxToMm(4),
+                  });
+                } else {
+                  setMargin({ top: 0, right: 0, bottom: 0, left: 0 });
+                }
               }}
             >
               {Object.keys(defaultPaperSizes).map((key) => (
-                <option key={key} value={key}>{key}</option>
+                <option key={key} value={key}>
+                  {paperSizeNames[key]}
+                </option>
               ))}
             </select>
           </label>
