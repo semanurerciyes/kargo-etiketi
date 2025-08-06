@@ -12,6 +12,13 @@ const paperSizeNames: Record<string, string> = {
   Label: "Etiket",
 };
 
+const directionsTR: Record<string, string> = {
+  top: "Üst",
+  right: "Sağ",
+  bottom: "Alt",
+  left: "Sol",
+};
+
 type Props = {
   partCount: 1 | 2 | 4 | 8 | 12 | 16 | 32;
   paperSize?: keyof typeof defaultPaperSizes;
@@ -34,7 +41,6 @@ export default function PaperLayout({
   const [margin, setMargin] = useState({ top: 0, right: 0, bottom: 0, left: 0 });
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  // px'den mm'ye dönüşüm (96 DPI standart)
   const pxToMm = (px: number) => (px * 25.4) / 96;
 
   const isCellEmpty = (i: number) => images[i] === null;
@@ -147,7 +153,7 @@ export default function PaperLayout({
         <div className="flex gap-2 flex-wrap">
           {["top", "right", "bottom", "left"].map((side) => (
             <label key={side}>
-              {side.toUpperCase()} boşluk:
+              {directionsTR[side]} boşluk:
               <input
                 type="number"
                 className="ml-1 border p-1 w-16"
@@ -197,7 +203,7 @@ export default function PaperLayout({
           display: "grid",
           gridTemplateColumns: `repeat(${cols}, 1fr)`,
           gridTemplateRows: `repeat(${rows}, 1fr)`,
-          gap: "0mm", // referans çizgisiz tam otursun
+          gap: "0mm",
         }}
       >
         {Array.from({ length: partCount }, (_, i) => (
