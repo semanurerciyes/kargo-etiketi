@@ -80,7 +80,7 @@ export default function IndexPage() {
       {/* Kağıt yerleşimi */}
       <PaperLayout
         partCount={partCount}
-        paperSize="A4"
+        
         images={images}
         setImages={setImages}
         orientation={orientation}
