@@ -2,16 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 
-const defaultPaperSizes = {
-  A4: { width: 210, height: 297 },
-  Label: { width: 210, height: 297 },
-};
-
-const paperSizeNames: Record<string, string> = {
-  A4: "A4",
-  Label: "Etiket",
-};
-
 const directionsTR: Record<string, string> = {
   top: "Üst",
   right: "Sağ",
@@ -21,7 +11,6 @@ const directionsTR: Record<string, string> = {
 
 type Props = {
   partCount: 1 | 2 | 4 | 8 | 12 | 16 | 32;
-  paperSize?: keyof typeof defaultPaperSizes;
   images: (string | null)[];
   setImages: React.Dispatch<React.SetStateAction<(string | null)[]>>;
   orientation: "portrait" | "landscape";
@@ -30,20 +19,15 @@ type Props = {
 
 export default function PaperLayout({
   partCount,
-  paperSize = "A4",
   images,
   setImages,
   orientation,
   setOrientation,
 }: Props) {
-  const [selectedPaperSize, setSelectedPaperSize] = useState<keyof typeof defaultPaperSizes>(paperSize);
-  const [customSize, setCustomSize] = useState(defaultPaperSizes[paperSize]);
   const [margin, setMargin] = useState({ top: 0, right: 0, bottom: 0, left: 0 });
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-
-  const pxToMm = (px: number) => (px * 25.4) / 96;
-
-  const isCellEmpty = (i: number) => images[i] === null;
+  const [presets, setPresets] = useState<Record<string, typeof margin>>({});
+  const [presetName, setPresetName] = useState("");
 
   const getGridDimensions = (count: number): [number, number] => {
     switch (count) {
@@ -59,9 +43,9 @@ export default function PaperLayout({
   };
 
   const [cols, rows] = getGridDimensions(partCount);
-  const sizeFromSelection = defaultPaperSizes[selectedPaperSize] || customSize;
-  const pageWidth = orientation === "portrait" ? sizeFromSelection.width : sizeFromSelection.height;
-  const pageHeight = orientation === "portrait" ? sizeFromSelection.height : sizeFromSelection.width;
+
+  const pageWidth = orientation === "portrait" ? 210 : 297;
+  const pageHeight = orientation === "portrait" ? 297 : 210;
   const contentWidth = pageWidth - margin.left - margin.right;
   const contentHeight = pageHeight - margin.top - margin.bottom;
   const cellWidth = contentWidth / cols;
@@ -71,9 +55,12 @@ export default function PaperLayout({
     document.body.classList.remove("portrait", "landscape");
     document.body.classList.add(orientation);
 
+    const saved = localStorage.getItem("margin-presets");
+    if (saved) setPresets(JSON.parse(saved));
+
     const handlePaste = (e: ClipboardEvent) => {
       const file = e.clipboardData?.files[0];
-      if (file && file.type.startsWith("image/") && selectedIndex !== null && isCellEmpty(selectedIndex)) {
+      if (file && file.type.startsWith("image/") && selectedIndex !== null && images[selectedIndex] === null) {
         const url = URL.createObjectURL(file);
         setImages((prev) => {
           const updated = [...prev];
@@ -84,10 +71,8 @@ export default function PaperLayout({
     };
 
     window.addEventListener("paste", handlePaste as EventListener);
-    return () => {
-      window.removeEventListener("paste", handlePaste as EventListener);
-    };
-  }, [orientation, selectedIndex, setImages]);
+    return () => window.removeEventListener("paste", handlePaste as EventListener);
+  }, [orientation, selectedIndex, setImages, images]);
 
   const handleClear = () => {
     if (selectedIndex !== null && images[selectedIndex]) {
@@ -103,40 +88,23 @@ export default function PaperLayout({
     window.print();
   };
 
+  const saveCurrentMarginAsPreset = (name: string) => {
+    const newPresets = { ...presets, [name]: margin };
+    setPresets(newPresets);
+    localStorage.setItem("margin-presets", JSON.stringify(newPresets));
+  };
+
+  const deletePreset = (name: string) => {
+    const { [name]: _, ...rest } = presets;
+    setPresets(rest);
+    localStorage.setItem("margin-presets", JSON.stringify(rest));
+  };
+
   return (
     <div className="p-4 print-area">
       {/* Ayar Paneli */}
-      <div className="mb-4 space-y-2 no-print">
+      <div className="mb-4 space-y-4 no-print">
         <div className="flex gap-4">
-          <label>
-            Sayfa Türü:
-            <select
-              className="ml-2 border p-1"
-              value={selectedPaperSize}
-              onChange={(e) => {
-                const value = e.target.value as keyof typeof defaultPaperSizes;
-                setSelectedPaperSize(value);
-                setCustomSize(defaultPaperSizes[value]);
-                if (value === "Label") {
-                  setMargin({
-                    top: pxToMm(20),
-                    right: pxToMm(4),
-                    bottom: pxToMm(20),
-                    left: pxToMm(4),
-                  });
-                } else {
-                  setMargin({ top: 0, right: 0, bottom: 0, left: 0 });
-                }
-              }}
-            >
-              {Object.keys(defaultPaperSizes).map((key) => (
-                <option key={key} value={key}>
-                  {paperSizeNames[key]}
-                </option>
-              ))}
-            </select>
-          </label>
-
           <label>
             Yön:
             <select
@@ -150,6 +118,58 @@ export default function PaperLayout({
           </label>
         </div>
 
+        {/* Hazır Margin Ayarları */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <label>
+            Hazır Boşluk Ayarı:
+            <select
+              className="ml-2 border p-1"
+              onChange={(e) => {
+                const selected = presets[e.target.value];
+                if (selected) setMargin(selected);
+              }}
+            >
+              <option value="">Seç</option>
+              {Object.keys(presets).map((key) => (
+                <option key={key} value={key}>{key}</option>
+              ))}
+            </select>
+          </label>
+
+          <button
+            onClick={() => {
+              const name = prompt("Silmek istediğiniz ayarın adını girin:");
+              if (name && presets[name]) deletePreset(name);
+            }}
+            className="px-2 py-1 text-xs bg-red-500 text-white rounded"
+          >
+            Ayar Sil
+          </button>
+        </div>
+
+        {/* Yeni Margin Ayarı Kaydet */}
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            placeholder="Ayar ismi girin"
+            className="border p-1"
+            value={presetName}
+            onChange={(e) => setPresetName(e.target.value)}
+          />
+          <button
+            onClick={() => {
+              if (presetName.trim()) {
+                saveCurrentMarginAsPreset(presetName.trim());
+                setPresetName("");
+              }
+            }}
+            className="px-2 py-1 text-xs bg-blue-500 text-white rounded"
+          >
+            Kaydet
+          </button>
+        </div>
+
+        {/* Margin Girişleri */}
         <div className="flex gap-2 flex-wrap">
           {["top", "right", "bottom", "left"].map((side) => (
             <label key={side}>
@@ -213,7 +233,7 @@ export default function PaperLayout({
             onDrop={(e) => {
               e.preventDefault();
               const file = e.dataTransfer.files[0];
-              if (file && file.type.startsWith("image/") && isCellEmpty(i)) {
+              if (file && file.type.startsWith("image/") && images[i] === null) {
                 const url = URL.createObjectURL(file);
                 setImages((prev) => {
                   const updated = [...prev];
